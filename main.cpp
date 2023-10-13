@@ -1,11 +1,12 @@
 #include <iostream>
 #include "tcp_server_controller.hpp"
-#include "tcp_client.hpp"
+#include "tcp_client.h"
 #include "network_utils.hpp"
-#include <sys/socket.h>
 #include <netinet/in.h>
-#include <netdb.h>
 #include <arpa/inet.h>
+#include "CommandParser/libcli.h"
+#include "CommandParser/cmdtlv.h"
+
 
 static void print_client(const tcp_client *tcp_clnt)
 {
@@ -36,6 +37,8 @@ static void appln_client_msg_recvd(const tcp_server_controller *tcp_svr, const t
 }
 
 int main(int argc, const char * argv[]) {
+
+#if 0
     
     std::unique_ptr<tcp_server_controller> server1 =
         std::make_unique<tcp_server_controller>("127.0.0.1", 40000, "Default TCP Server");
@@ -47,6 +50,10 @@ int main(int argc, const char * argv[]) {
     
     server1->display();
     
+#endif
+
+    init_libcli();
+    start_shell();
     
     
     
