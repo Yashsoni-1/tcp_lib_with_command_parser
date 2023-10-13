@@ -5,6 +5,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <iostream>
+#include "tcp_msg_fixed_size_demarcar.hpp"
+#include "tcp_msg_variable_size_demarcar.hpp"
 
 tcp_new_connection_acceptor::
 tcp_new_connection_acceptor(tcp_server_controller *tcp_svr_cntrlr)
@@ -75,6 +77,9 @@ void tcp_new_connection_acceptor::start_tcp_new_connection_acceptor_thread_inter
         if(this->tcp_svr_ctrlr->client_connected) {
             this->tcp_svr_ctrlr->client_connected(this->tcp_svr_ctrlr, tcp_clnt);
         }
+        
+        tcp_clnt->msgd = new tcp_msg_fixed_size_demarcar(25);
+        
         this->tcp_svr_ctrlr->process_new_client(tcp_clnt);
         
         std::cout << "Connection Accepted from client ["

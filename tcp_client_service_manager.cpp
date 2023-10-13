@@ -3,9 +3,10 @@
 #include "tcp_client_service_manager.hpp"
 #include "tcp_client.hpp"
 #include "tcp_server_controller.hpp"
+#include "tcp_msg_demarcar.hpp"
 
-constexpr int TCP_CLIENT_RECV_BUFFER_SIZE = 1024;
-unsigned char client_recv_buffer[TCP_CLIENT_RECV_BUFFER_SIZE];
+
+unsigned char client_recv_buffer[MAX_CLIENT_BUFFER_SIZE];
 
 tcp_client_service_manager::tcp_client_service_manager(tcp_server_controller *tcp_svr_cntrlr)
 : tcp_svr_ctrlr(tcp_svr_cntrlr), max_fd(0) {
@@ -44,11 +45,18 @@ void tcp_client_service_manager::tcp_start_svc_manager_thread_internal()
             {
                 rcv_bytes = recvfrom(tcp_clnt->comm_fd,
                                      client_recv_buffer,
-                                     TCP_CLIENT_RECV_BUFFER_SIZE,
+                                     MAX_CLIENT_BUFFER_SIZE,
                                      0,
                                      (sockaddr *)&client_addr, &addr_len);
                 
-                if(this->tcp_svr_ctrlr->client_msg_recvd) {
+                if(rcv_bytes == 0) {
+                    std::cout << "Errno no = " << errno << '\n';
+                }
+                
+                if(tcp_clnt->msgd) {
+                    tcp_clnt->msgd->process_msg(tcp_clnt, client_recv_buffer, rcv_bytes);
+                } else if(this->tcp_svr_ctrlr->client_msg_recvd)
+                {
                     this->tcp_svr_ctrlr->client_msg_recvd(this->tcp_svr_ctrlr,
                                                           tcp_clnt,
                                                           client_recv_buffer,
@@ -56,7 +64,7 @@ void tcp_client_service_manager::tcp_start_svc_manager_thread_internal()
                 }
             }
             
-            memset(client_recv_buffer, 0, TCP_CLIENT_RECV_BUFFER_SIZE);
+            memset(client_recv_buffer, 0, MAX_CLIENT_BUFFER_SIZE);
             
         }
     }

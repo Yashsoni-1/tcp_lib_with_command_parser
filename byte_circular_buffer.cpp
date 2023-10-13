@@ -47,7 +47,7 @@ uint16_t byte_circular_buffer::bcb_read(unsigned char *data, uint16_t data_size,
     if(this->current_size < data_size) return 0;
     
     if(this->rear < this->front) {
-        memcpy(buffer, BCB(this, this->rear), data_size);
+        memcpy(data, BCB(this, this->rear), data_size);
         if(remove_read_bytes) {
             this->rear += data_size;
             if(this->rear == this->buffer_size) this->rear = 0;
@@ -59,7 +59,7 @@ uint16_t byte_circular_buffer::bcb_read(unsigned char *data, uint16_t data_size,
     uint16_t leading_space = this->buffer_size - this->rear;
     
     if(data_size <= leading_space) {
-        memcpy(buffer, BCB(this, this->rear), data_size);
+        memcpy(data, BCB(this, this->rear), data_size);
         if(remove_read_bytes) {
             this->rear += data_size;
             if(this->rear == this->buffer_size) this->rear = 0;
@@ -68,8 +68,8 @@ uint16_t byte_circular_buffer::bcb_read(unsigned char *data, uint16_t data_size,
         return data_size;
     }
     
-    memcpy(buffer, BCB(this, this->rear), leading_space);
-    memcpy(buffer, BCB(this, 0), data_size - leading_space);
+    memcpy(data, BCB(this, this->rear), leading_space);
+    memcpy(data, BCB(this, 0), data_size - leading_space);
     if(remove_read_bytes) {
         this->rear = data_size - leading_space;
         this->current_size -= data_size;
