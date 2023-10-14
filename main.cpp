@@ -10,6 +10,8 @@
 
 #define TCP_SERVER_CREATE 1
 #define TCP_SERVER_START 2
+#define TCP_SERVER_SHOW_TCP_SERVER 3
+#define TCP_SERVER_STOP_CONN_ACCEPT 4
 
 std::list<tcp_server_controller *> tcp_server_list;
 uint16_t default_port_no = 40000;
@@ -71,6 +73,22 @@ int config_tcp_server_handler(param_t *param, ser_buff_t *ser_buff, op_mode enab
             }
             tcp_server->start();
             break;
+        case TCP_SERVER_STOP_CONN_ACCEPT:
+            tcp_server = tcp_server_lookup(std::string(tcp_server_name));
+            if(!tcp_server) {
+                std::cout << "Error: Tcp server do not exists\n";
+                return -1;
+            }
+            switch(enable_or_disable) {
+                case CONFIG_ENABLE:
+                    tcp_server->stop_connection_accepting_svc();
+                    break;
+                case CONFIG_DISABLE:
+                    tcp_server->start_connection_accepting_svc();
+                    break;
+                default:
+                    break;
+            }
         default:
             break;
     }
@@ -118,6 +136,13 @@ static void tcp_build_config_cli_tree()
             init_param(&tcp_server_name, LEAF, NULL, config_tcp_server_handler, NULL, STRING, "tcp-server-name", "tcp server name");
             libcli_register_param(&tcp_server, &tcp_server_name); 
             set_param_cmd_code(&tcp_server_name, TCP_SERVER_CREATE);
+            
+            {
+                static param_t dis_conn_accept;
+                init_param(&dis_conn_accept, CMD, "disable-conn-accept", config_tcp_server_handler, NULL, INVALID, NULL, "Connection Accept Settings");
+                libcli_register_param(&tcp_server_name, &dis_conn_accept);
+                set_param_cmd_code(&dis_conn_accept, TCP_SERVER_STOP_CONN_ACCEPT);
+            }
 
             {
                 static param_t tcp_server_addr;
