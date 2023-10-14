@@ -147,6 +147,17 @@ static void tcp_build_config_cli_tree()
 static void tcp_build_show_cli_tree()
 {
     param_t *show_hook = libcli_get_show_hook();
+
+    {
+        static param_t tcp_server;
+        init_param(&tcp_server, CMD, "tcp-server", NULL, NULL, INVALID, NULL, "show tcp-server");
+        libcli_register_param(show_hook, &tcp_server); 
+        {
+            static param_t tcp_server_name;
+            init_param(&tcp_server_name, LEAF, NULL, show_tcp_server_handler, NULL, STRING, "tcp-server-name", "tcp server name");
+            libcli_register_param(&tcp_server, &tcp_server_name); 
+            set_param_cmd_code(&tcp_server_name, TCP_SERVER_SHOW);
+        }
 }
 
 static void
