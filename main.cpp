@@ -163,10 +163,12 @@ static void tcp_build_config_cli_tree()
                 libcli_register_param(&tcp_server_name, &start); 
                 set_param_cmd_code(&start, TCP_SERVER_START);
             }
+
+            support_cmd_negation(&tcp_server_name);
         }
     } 
-        
-    
+
+    support_cmd_negation(config_hook);
 }
 
 static void tcp_build_show_cli_tree()
