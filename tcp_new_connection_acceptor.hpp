@@ -15,7 +15,8 @@ public:
     
     void start_tcp_new_connection_acceptor_thread();
     void start_tcp_new_connection_acceptor_thread_internal();
-    
+    void stop_tcp_new_connection_acceptor_thread();
+    void stop();
 private:
     int accept_fd;
     pthread_t *accept_new_conn_thread;

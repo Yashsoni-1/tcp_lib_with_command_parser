@@ -1,16 +1,18 @@
 #include <algorithm>
 #include <sys/select.h>
+#include <unistd.h>
 #include "tcp_client_service_manager.hpp"
 #include "tcp_client.hpp"
 #include "tcp_server_controller.hpp"
 #include "tcp_msg_demarcar.hpp"
 
 
+
 unsigned char client_recv_buffer[MAX_CLIENT_BUFFER_SIZE];
 
 tcp_client_service_manager::tcp_client_service_manager(tcp_server_controller *tcp_svr_cntrlr)
-: tcp_svr_ctrlr(tcp_svr_cntrlr), max_fd(0) {
-    
+        : tcp_svr_ctrlr(tcp_svr_cntrlr), max_fd(0)
+{
     FD_ZERO(&this->active_fd_set);
     FD_ZERO(&this->backup_fd_set);
     
@@ -27,22 +29,28 @@ void tcp_client_service_manager::tcp_start_svc_manager_thread_internal()
     sockaddr_in client_addr;
     std::list<tcp_client *>::iterator it;
     
+    if(this->tcp_svr_ctrlr->is_bit_set(TCP_SERVER_NOT_LISTENING_CLIENTS)) {
+        this->tcp_svr_ctrlr->copy_all_clients_to_list(&this->tcp_client_db);
+    }
+    
     socklen_t addr_len = sizeof(client_addr);
+    this->max_fd = this->get_max_fd();
     FD_ZERO(&this->backup_fd_set);
     this->copy_client_fd_to_fd_set(&this->backup_fd_set);
-    this->max_fd = get_max_fd();
+    
+
     
     while (true) {
         memcpy(&this->active_fd_set, &this->backup_fd_set, sizeof(fd_set));
-        select(max_fd + 1, &this->active_fd_set, 0, 0, 0);
+        select(this->max_fd + 1, &this->active_fd_set, 0, 0, 0);
         
         for(it = this->tcp_client_db.begin(), tcp_clnt = *it;
             it != this->tcp_client_db.end();
-            tcp_clnt = next_tcp_clnt)
-        {
+            tcp_clnt = next_tcp_clnt) {
+            
             next_tcp_clnt = *(++it);
-            if(FD_ISSET(tcp_clnt->comm_fd, &this->active_fd_set))
-            {
+            if(FD_ISSET(tcp_clnt->comm_fd, &this->active_fd_set)) {
+                
                 rcv_bytes = recvfrom(tcp_clnt->comm_fd,
                                      client_recv_buffer,
                                      MAX_CLIENT_BUFFER_SIZE,
@@ -51,12 +59,13 @@ void tcp_client_service_manager::tcp_start_svc_manager_thread_internal()
                 
                 if(rcv_bytes == 0) {
                     std::cout << "Errno no = " << errno << '\n';
+                    sleep(1);
                 }
                 
                 if(tcp_clnt->msgd) {
                     tcp_clnt->msgd->process_msg(tcp_clnt, client_recv_buffer, rcv_bytes);
-                } else if(this->tcp_svr_ctrlr->client_msg_recvd)
-                {
+                }
+                else if(this->tcp_svr_ctrlr->client_msg_recvd) {
                     this->tcp_svr_ctrlr->client_msg_recvd(this->tcp_svr_ctrlr,
                                                           tcp_clnt,
                                                           client_recv_buffer,
@@ -90,6 +99,7 @@ void tcp_client_service_manager::start_tcp_client_service_manager_thread()
     pthread_attr_init(&attr);
     
     pthread_create(this->client_svc_mgr_thread, &attr, tcp_client_svc_manager_thread_fn, (void *)this);
+    sleep(1);
     std::cout << "Service started: " << __FUNCTION__ << '\n';
 }
 
@@ -165,4 +175,24 @@ void tcp_client_service_manager::add_client_to_db(tcp_client *tcp_clnt)
     {
         this->tcp_client_db.push_back(tcp_clnt);
     }
+}
+
+void tcp_client_service_manager::stop()
+{
+    this->stop_tcp_client_service_manager_thread();
+    
+    std::list<tcp_client *>::iterator it;
+    tcp_client *tcp_clnt, *next_tcp_clnt = nullptr;
+    
+    assert(this->client_svc_mgr_thread == NULL);
+    
+    for(it = this->tcp_client_db.begin(), tcp_clnt = *it;
+        it != this->tcp_client_db.end();
+        tcp_clnt = next_tcp_clnt) {
+        
+        next_tcp_clnt = *(++it);
+        this->tcp_client_db.remove(tcp_clnt);
+    }
+    
+    delete this;
 }

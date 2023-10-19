@@ -18,6 +18,7 @@ public:
     
     void start_tcp_client_service_manager_thread();
     void stop_tcp_client_service_manager_thread();
+    void stop();
     void client_fd_start_listen(tcp_client *tcp_clnt);
     void tcp_start_svc_manager_thread_internal();
     void add_client_to_db(tcp_client *tcp_clnt);

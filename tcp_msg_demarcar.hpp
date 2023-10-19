@@ -23,7 +23,7 @@ public:
     
     tcp_msg_demarcar(uint16_t circular_buffer_len);
     tcp_msg_demarcar();
-    ~tcp_msg_demarcar();
+    virtual ~tcp_msg_demarcar();
     
     void destroy();
     void process_msg(tcp_client *, unsigned char *msg_recvd, uint16_t msg_size);

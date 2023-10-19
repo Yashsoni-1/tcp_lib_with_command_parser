@@ -15,7 +15,6 @@ tcp_msg_demarcar::tcp_msg_demarcar()
     this->buffer = new unsigned char[MAX_CLIENT_BUFFER_SIZE];
 }
 
-
 tcp_msg_demarcar::~tcp_msg_demarcar()
 {
     assert(this->bcb);

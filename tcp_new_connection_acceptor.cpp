@@ -7,6 +7,7 @@
 #include <iostream>
 #include "tcp_msg_fixed_size_demarcar.hpp"
 #include "tcp_msg_variable_size_demarcar.hpp"
+#include <unistd.h>
 
 tcp_new_connection_acceptor::
 tcp_new_connection_acceptor(tcp_server_controller *tcp_svr_cntrlr)
@@ -20,7 +21,7 @@ tcp_new_connection_acceptor(tcp_server_controller *tcp_svr_cntrlr)
         exit(1);
     }
     
-    accept_new_conn_thread = (pthread_t *)calloc(1, sizeof(pthread_t));
+    accept_new_conn_thread = new pthread_t;
 }
 
 tcp_new_connection_acceptor::~tcp_new_connection_acceptor() {}
@@ -69,21 +70,24 @@ void tcp_new_connection_acceptor::start_tcp_new_connection_acceptor_thread_inter
             continue;
         }
         
-        tcp_client *tcp_clnt = new tcp_client(client_addr.sin_addr.s_addr, client_addr.sin_port);
+        tcp_client *tcp_clnt = new tcp_client(htonl(client_addr.sin_addr.s_addr), htons(client_addr.sin_port));
         
         tcp_clnt->tcp_svr_crtrlr = this->tcp_svr_ctrlr;
         tcp_clnt->comm_fd = comm_sock_fd;
+        
+        tcp_clnt->server_port_no = this->tcp_svr_ctrlr->port_no;
+        tcp_clnt->server_ip_addr = this->tcp_svr_ctrlr->ip_addr;
         
         if(this->tcp_svr_ctrlr->client_connected) {
             this->tcp_svr_ctrlr->client_connected(this->tcp_svr_ctrlr, tcp_clnt);
         }
         
-        tcp_clnt->msgd = new tcp_msg_fixed_size_demarcar(25);
+        tcp_clnt->msgd = nullptr;
         
         this->tcp_svr_ctrlr->process_new_client(tcp_clnt);
         
         std::cout << "Connection Accepted from client ["
-        << network_convert_ip_n_to_p(htonl(client_addr.sin_addr.s_addr), NULL)
+        << network_convert_ip_n_to_p(htonl(client_addr.sin_addr.s_addr), nullptr)
         << ", " << (htons(client_addr.sin_port)) << "]\n";
     }
 }
@@ -110,3 +114,20 @@ void tcp_new_connection_acceptor::start_tcp_new_connection_acceptor_thread()
     std::cout << "Service Started : " << __FUNCTION__ << '\n';
 }
 
+void tcp_new_connection_acceptor::stop_tcp_new_connection_acceptor_thread()
+{
+    if(!this->accept_new_conn_thread) return;
+    pthread_cancel(*this->accept_new_conn_thread);
+    pthread_join(*this->accept_new_conn_thread, NULL);
+    delete this->accept_new_conn_thread;
+    this->accept_new_conn_thread = NULL;
+}
+
+
+void tcp_new_connection_acceptor::stop()
+{
+    this->stop_tcp_new_connection_acceptor_thread();
+    close(this->accept_fd);
+    this->accept_fd = 0;
+    delete this;
+}

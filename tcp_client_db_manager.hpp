@@ -20,9 +20,11 @@ public:
     void start_tcp_client_db_mgr_init();
     void add_client_to_db(tcp_client *tcp_clnt);
     void display_client_db();
+    void purge();
+    void copy_all_clients_to_list(std::list<tcp_client *> *ls);
 private:
     std::list<tcp_client *> tcp_client_db;
-    
+    pthread_rwlock_t rwlock;
 };
 
 #endif
