@@ -2,6 +2,7 @@
 #define network_utils_hpp
 
 #include <iostream>
+#include <cstring>
 
 char *
 network_convert_ip_n_to_p(uint32_t, char *);
