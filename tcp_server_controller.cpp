@@ -73,7 +73,7 @@ void tcp_server_controller::display()
 {
     std::cout << "Server Name : " << this->name << '\n';
     
-    if(this->is_bit_set(TCP_SERVER_RUNNING)) {
+    if(!this->is_bit_set(TCP_SERVER_RUNNING)) {
         std::cout << "Tcp server is not running\n";
         return;
     }
@@ -140,7 +140,7 @@ void tcp_server_controller::unset_bit(uint32_t bit_value)
 
 bool tcp_server_controller::is_bit_set(uint32_t bit_value)
 {
-    return (this->state_flags &= bit_value);
+    return (this->state_flags & bit_value);
 }
 
 
