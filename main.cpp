@@ -203,7 +203,7 @@ show_tcp_server_handler(param_t *param, ser_buff_t *ser_buff, op_mode enable_or_
     switch(cmd_code) {
         case TCP_SERVER_SHOW_TCP_SERVER:
             tcp_server = tcp_server_lookup(std::string(server_name));
-            if(tcp_server) {
+            if(!tcp_server) {
                 std::cout << "Error: Tcp server already exists\n";
                 return -1;
             }
