@@ -13,7 +13,7 @@
 #define TCP_SERVER_SHOW_TCP_SERVER 3
 #define TCP_SERVER_STOP_CONN_ACCEPT 4
 #define TCP_SERVER_STOP_CLIENT_LISTEN 5
-#define 
+#define TCP_SERVER_STOP 6
 #define TCP_SERVER_CONNECT_REMOTE 7
 
 std::list<tcp_server_controller *> tcp_server_list;
@@ -76,6 +76,7 @@ int config_tcp_server_handler(param_t *param, ser_buff_t *ser_buff, op_mode enab
             tcp_server_list.push_back(tcp_server);
             tcp_server->set_server_notif_callbacks(appln_client_connected, appln_client_disconnected, appln_client_msg_recvd);
             break;
+        
         case TCP_SERVER_START:
             tcp_server = tcp_server_lookup(std::string(tcp_server_name));
             if(!tcp_server) {
@@ -84,6 +85,7 @@ int config_tcp_server_handler(param_t *param, ser_buff_t *ser_buff, op_mode enab
             }
             tcp_server->start();
             break;
+        
         case TCP_SERVER_STOP_CONN_ACCEPT:
             tcp_server = tcp_server_lookup(std::string(tcp_server_name));
             if(!tcp_server) {
@@ -101,6 +103,7 @@ int config_tcp_server_handler(param_t *param, ser_buff_t *ser_buff, op_mode enab
                     break;
             }
             break;
+        
         case TCP_SERVER_STOP_CLIENT_LISTEN:
             tcp_server = tcp_server_lookup(std::string(tcp_server_name));
             if(!tcp_server) {
@@ -114,10 +117,25 @@ int config_tcp_server_handler(param_t *param, ser_buff_t *ser_buff, op_mode enab
                 case CONFIG_DISABLE:
                     tcp_server->start_client_svc_mgr();
                     break;
-                default:
-                    break;
             }
             break;
+        
+        case TCP_SERVER_STOP:
+            tcp_server = tcp_server_lookup(std::string(tcp_server_name));
+            if(!tcp_server) {
+                std::cout << "Error: Tcp server do not exists\n";
+                return -1;
+            }
+            switch(enable_or_disable) {
+                case CONFIG_ENABLE:
+                    tcp_server->stop();
+                    break;
+                case CONFIG_DISABLE:
+                    std::cout << "Command negation is not available for this CLI\n";
+                    return -1;
+            }
+            break;
+        
         case  TCP_SERVER_CONNECT_REMOTE:
             tcp_server = tcp_server_lookup(std::string(tcp_server_name));
             if(!tcp_server) {
@@ -130,13 +148,43 @@ int config_tcp_server_handler(param_t *param, ser_buff_t *ser_buff, op_mode enab
                     break;
                 case CONFIG_DISABLE:
                     break;
-                default:
-                    break;
             }
             break;
         default:
             break;
     }
+    return 0;
+}
+
+static int 
+show_tcp_server_handler(param_t *param, ser_buff_t *ser_buff, op_mode enable_or_disable) 
+{
+    int cmd_code;
+    const char *server_name = nullptr;
+    tlv_struct_t *tlv = nullptr;
+    tcp_server_controller *tcp_server = nullptr;
+   
+    cmd_code = EXTRACT_CMD_CODE(ser_buff);
+
+    TLV_LOOP_BEGIN(ser_buff, tlv) {
+        if(strncmp(tlv->leaf_id, "tcp-server-name", strlen("tcp-server-name")) == 0) {
+            server_name = tlv->value;
+        } 
+    } TLV_LOOP_END;
+
+    switch(cmd_code) {
+        case TCP_SERVER_SHOW_TCP_SERVER:
+            tcp_server = tcp_server_lookup(std::string(tcp_server_name));
+            if(tcp_server) {
+                std::cout << "Error: Tcp server already exists\n";
+                return -1;
+            }
+            tcp_server->display();
+            break;
+        default:
+            break;
+    }
+
     return 0;
 }
 
@@ -254,7 +302,7 @@ static void tcp_build_show_cli_tree()
             static param_t tcp_server_name;
             init_param(&tcp_server_name, LEAF, NULL, show_tcp_server_handler, NULL, STRING, "tcp-server-name", "tcp server name");
             libcli_register_param(&tcp_server, &tcp_server_name); 
-            set_param_cmd_code(&tcp_server_name, TCP_SERVER_SHOW);
+            set_param_cmd_code(&tcp_server_name, TCP_SERVER_SHOW_TCP_SERVER);
         }
 }
 
