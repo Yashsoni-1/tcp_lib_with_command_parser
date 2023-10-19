@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <list>
 #include <netinet/in.h>
+#include <cstring>
+#include <cassert>
 
 class tcp_server_controller;
 class tcp_client;
