@@ -20,7 +20,7 @@ Created multithreaded TCP library/server in C++ over POSIX. This is a simple tcp
 - Wooho, the your TCP server is ready.
 - I have also provided to client program to test.
 - You can also use your own.
-- Just type ? to know about all the apis.
+- Just type ? to know about all the API.
 
 ## ACKNOWLEDGMENT
 - Sir, Abishesk Sagar for guidance and command parser library.
