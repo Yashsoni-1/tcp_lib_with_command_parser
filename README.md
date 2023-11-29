@@ -6,7 +6,7 @@ Complete multithreaded TCP library/server built in C++ over POSIX.
 1. To manage multiple cliets through multiplexing.
 2. To forcefully disconnect the client.
 3. To gracefully shutdown the server.
-4. To notify the application about new client, disconnection and message received.
+4. To notify the application about the new client, disconnection and message received.
 5. To handle concurrency using mutex.
 6. To apply the TCP demarcation.
 7. To build socket programming C++ library over POSIX.
